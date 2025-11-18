@@ -3,6 +3,8 @@ from fastapi import FastAPI
 from src.config.project import settings as main_settings
 from src.config.swagger import settings as swagger_settings
 
+from src.lifespan import lifespan
+
 
 def get_app() -> FastAPI:
     app = FastAPI(
@@ -13,7 +15,7 @@ def get_app() -> FastAPI:
         terms_of_service=swagger_settings.terms_of_service,
         contact=swagger_settings.contact,
         license_info=swagger_settings.license,
-        # lifespan=lifespan,
+        lifespan=lifespan,
         root_path=main_settings.root_path,
         debug=main_settings.debug,
         docs_url=swagger_settings.docs_url if main_settings.debug else None,
