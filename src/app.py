@@ -10,6 +10,9 @@ from src.lifespan import lifespan
 
 from src.middleware import init_middleware
 
+from src.routes import router
+
+
 def get_app() -> FastAPI:
     if logging_settings.logging_on:
         logging.config.dictConfig(logger_config) # noqa
@@ -31,6 +34,8 @@ def get_app() -> FastAPI:
     )
 
     init_middleware(app)
+
+    app.include_router(router)
 
     return app
 
