@@ -1,12 +1,18 @@
+import logging
+
 from fastapi import FastAPI
 
 from src.config.project import settings as main_settings
 from src.config.swagger import settings as swagger_settings
+from src.config.logging import settings as logging_settings, logger_config
 
 from src.lifespan import lifespan
 
 
 def get_app() -> FastAPI:
+    if logging_settings.logging_on:
+        logging.config.dictConfig(logger_config) # noqa
+
     app = FastAPI(
         title=swagger_settings.title,
         # description=get_description(swagger_settings.description),
