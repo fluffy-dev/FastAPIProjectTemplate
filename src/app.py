@@ -1,8 +1,25 @@
 from fastapi import FastAPI
 
+from src.config.project import settings as main_settings
+from src.config.swagger import settings as swagger_settings
+
 
 def get_app() -> FastAPI:
-    app = FastAPI()
+    app = FastAPI(
+        title=swagger_settings.title,
+        # description=get_description(swagger_settings.description),
+        summary=swagger_settings.summary,
+        version=main_settings.version,
+        terms_of_service=swagger_settings.terms_of_service,
+        contact=swagger_settings.contact,
+        license_info=swagger_settings.license,
+        # lifespan=lifespan,
+        root_path=main_settings.root_path,
+        debug=main_settings.debug,
+        docs_url=swagger_settings.docs_url if main_settings.debug else None,
+        redoc_url=swagger_settings.redoc_url if main_settings.debug else None,
+        openapi_url=f"{swagger_settings.docs_url}/openapi.json" if main_settings.debug else None,
+    )
 
     return app
 
