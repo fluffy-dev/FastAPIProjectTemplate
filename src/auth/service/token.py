@@ -1,39 +1,58 @@
-from datetime import datetime, timedelta, timezone
-from typing import Optional
+from jwt import ExpiredSignatureError, PyJWTError, decode, encode, get_unverified_header
 
-from jose import JWTError, jwt
+from src.auth.dto import TokenDTO, UserDTO
+from datetime import datetime, timedelta
+from src.config.jwt import settings as jwt_settings
+from src.config.security import settings as security_settings
+from src.auth.exceptions.token import InvalidSignatureError
 
-from src.config.security import settings as auth_settings
-from src.auth.dto import TokenPayloadDTO
 
 class TokenService:
-    """
-    Provides services for creating and validating JWT tokens.
-    """
-    @staticmethod
-    def create_access_token(data: dict) -> str:
-        to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=auth_settings.ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-        to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, auth_settings.SECRET_KEY, algorithm=auth_settings.ALGORITHM)
+    def __init__(self) -> None:
+        self.access_token_lifetime = jwt_settings.access_token_expire_seconds
+        self.refresh_token_lifetime = jwt_settings.refresh_token_lifetime_seconds
+        self.secret_key = security_settings.secret_key
+        self.algorithm = security_settings.algorithm
 
-    @staticmethod
-    def create_refresh_token(data: dict) -> str:
-        to_encode = data.copy()
-        expire = datetime.now(timezone.utc) + timedelta(
-            days=auth_settings.REFRESH_TOKEN_EXPIRE_DAYS
-        )
-        to_encode.update({"exp": expire})
-        return jwt.encode(to_encode, auth_settings.SECRET_KEY, algorithm=auth_settings.ALGORITHM)
+    async def create_tokens(self, dto: UserDTO) -> TokenDTO:
+        access_token = await self.generate_access_token(dto)
+        refresh_token = await self.generate_refresh_token(dto)
+        return TokenDTO(access_token=access_token, refresh_token=refresh_token)
 
-    @staticmethod
-    def verify_token(token: str) -> Optional[TokenPayloadDTO]:
+    def _validate_token(self, token: str):
+        token_info = get_unverified_header(token)
+        if token_info["alg"] != self.algorithm:
+            raise InvalidSignatureError("Key error")
+        return token
+
+    async def encode_token(self, payload: dict) -> str:
+        return encode(payload, self.secret_key, self.algorithm)
+
+    async def decode_token(self, token: str) -> dict:
         try:
-            payload = jwt.decode(
-                token, auth_settings.SECRET_KEY, algorithms=[auth_settings.ALGORITHM]
-            )
-            return TokenPayloadDTO(**payload)
-        except JWTError:
-            return None
+            self._validate_token(token)
+            return decode(token, self.secret_key, self.algorithm)
+        except ExpiredSignatureError:
+            raise ExpiredSignatureError("Token lifetime is expired")
+        except PyJWTError:
+            raise Exception("Token is invalid")
+
+    async def generate_access_token(self, dto: UserDTO):
+        expire = datetime.now() + timedelta(seconds=self.access_token_lifetime)
+        payload = {
+            "token_type": "access",
+            "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
+            "exp": str(expire),
+            "iat": str(datetime.now()),
+        }
+        return await self.encode_token(payload)
+
+    async def generate_refresh_token(self, dto: UserDTO):
+        expire = datetime.now() + timedelta(seconds=self.refresh_token_lifetime)
+        payload = {
+            "token_type": "access",
+            "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
+            "exp": str(expire),
+            "iat": str(datetime.now()),
+        }
+        return await self.encode_token(payload)
