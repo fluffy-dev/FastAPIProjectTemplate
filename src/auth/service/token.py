@@ -3,8 +3,8 @@ from typing import Optional
 
 from jose import JWTError, jwt
 
-from hh.config.security import settings as auth_settings
-from hh.auth.dto import TokenPayloadDTO
+from src.config.security import settings as auth_settings
+from src.auth.dto import TokenPayloadDTO
 
 class TokenService:
     """

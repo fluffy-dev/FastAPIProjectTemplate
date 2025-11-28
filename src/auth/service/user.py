@@ -1,7 +1,7 @@
-from hh.auth.entities import UserEntity
-from hh.auth.dependencies.user.repository import IUserRepository
-from hh.auth.dto import BaseUserDTO, CreateUserDTO, UserDTO
-from hh.auth.service.password import PasswordService
+from src.auth.entities import UserEntity
+from src.auth.dependencies.user.repository import IUserRepository
+from src.auth.dto import BaseUserDTO, CreateUserDTO, UserDTO
+from src.auth.service.password import PasswordService
 
 class UserService:
     def __init__(self, user_repository: IUserRepository):

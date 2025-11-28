@@ -1,10 +1,10 @@
 from typing import Annotated
 from fastapi import Depends, HTTPException, status
 
-from hh.auth.service.token import TokenService
-from hh.auth.dependencies.user_repository import IUserRepository
-from hh.auth.dto import BaseUserDTO, AccessTokenDTO
-from hh.auth.exceptions import UserNotFound
+from src.auth.service.token import TokenService
+from src.auth.dependencies.user_repository import IUserRepository
+from src.auth.dto import BaseUserDTO, AccessTokenDTO
+from src.auth.exceptions import UserNotFound
 
 
 async def get_current_user(token: AccessTokenDTO, user_repo: IUserRepository) -> BaseUserDTO:

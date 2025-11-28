@@ -1,9 +1,9 @@
-from hh.auth.dependencies.user.repository import IUserRepository
-from hh.auth.dto import FindUserDTO
-from hh.auth.exceptions import UserNotFound
-from hh.auth.service.password import PasswordService
-from hh.auth.service.token import TokenService
-from hh.auth.dto import TokenDTO, LoginDTO
+from src.auth.dependencies.user.repository import IUserRepository
+from src.auth.dto import FindUserDTO
+from src.auth.exceptions import UserNotFound
+from src.auth.service.password import PasswordService
+from src.auth.service.token import TokenService
+from src.auth.dto import TokenDTO, LoginDTO
 
 class AuthService:
     """

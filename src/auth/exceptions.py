@@ -1,4 +1,4 @@
-from hh.libs.exceptions import AlreadyExists, NotFound
+from src.libs.exceptions import AlreadyExists, NotFound
 
 #User
 class UserAlreadyExist(AlreadyExists):

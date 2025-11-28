@@ -2,9 +2,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
-from hh.auth.dependencies.auth.service import IAuthService
-from hh.auth.exceptions import UserNotFound
-from hh.auth.dto import TokenDTO
+from src.auth.dependencies.auth.service import IAuthService
+from src.auth.exceptions import UserNotFound
+from src.auth.dto import TokenDTO
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
