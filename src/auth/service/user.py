@@ -1,3 +1,4 @@
+from auth.dto import FindUserDTO
 from src.auth.entities import UserEntity
 from src.auth.dependencies.user.repository import IUserRepository
 from src.auth.dto import BaseUserDTO, CreateUserDTO, UserDTO
@@ -20,6 +21,7 @@ class UserService:
         )
         created_user: BaseUserDTO = await self.repository.create(user_entity)
         return UserDTO(
+            id=created_user.id,
             name=created_user.name,
             login=created_user.login,
             email=created_user.email,
@@ -30,3 +32,15 @@ class UserService:
         Get a full user dto by its primary key.
         """
         return await self.repository.get(pk)
+
+    async def find(self, dto: FindUserDTO) -> UserDTO:
+        """
+        Find user by FindUserDTO
+        """
+        user_dto = await self.repository.find(dto)
+        return UserDTO(
+            id=user_dto.id,
+            name=user_dto.name,
+            login=user_dto.login,
+            email=user_dto.email,
+        )

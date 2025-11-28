@@ -1,47 +1,59 @@
-from src.auth.dependencies.user.repository import IUserRepository
-from src.auth.dto import FindUserDTO
-from src.auth.exceptions import UserNotFound
+from typing import Optional
+
+from auth.dto import RegistrationDTO, CreateUserDTO
+from auth.entities import UserEntity
+from src.auth.exceptions.auth import CredentialsException
+from src.auth.dependencies.user.service import IUserService
+from src.auth.dto import FindUserDTO, UserDTO
 from src.auth.service.password import PasswordService
-from src.auth.service.token import TokenService
 from src.auth.dto import TokenDTO, LoginDTO
+
+from src.auth.dependencies.token.service import ITokenService
+
+
 
 class AuthService:
     """
     Service layer for authentication logic.
     """
-    def __init__(self, user_repo: IUserRepository):
-        self.user_repo = user_repo
+    def __init__(self, user_service: IUserService, token_service: ITokenService):
+        self.user_service = user_service
+        self.token_service = token_service
 
-    async def login(self, login_form: LoginDTO) -> TokenDTO:
+    async def login(self, dto: LoginDTO) -> TokenDTO:
         """
         Authenticates a user and issues JWT tokens.
 
         Args:
-            login_form: The user's login and password.
+            dto: The user's login and password.
 
         Returns:
             TokenDTO: A DTO containing the access and refresh tokens.
 
         Raises:
-            UserNotFound: If the user does not exist or password is incorrect.
+            CredentialsException: If the user does not exist or password is incorrect.
         """
-        user = await self.user_repo.find(FindUserDTO(login=login_form.login))
+        user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(login=dto.login))
 
         if not user:
-            user = await self.user_repo.find(FindUserDTO(email=login_form.login))
+            user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(email=dto.login))
 
         if not user:
-            raise UserNotFound
+            raise CredentialsException
 
-        if not PasswordService.verify_password(login_form.password, user.password):
-            raise UserNotFound
+        if not PasswordService.verify_password(dto.password, user.password):
+            raise CredentialsException
 
-        access_token = TokenService.create_access_token(data={"sub": str(user.id)})
-        refresh_token = TokenService.create_refresh_token(data={"sub": str(user.id)})
+        user: UserDTO = user
+        return await self.token_service.create_tokens(user)
 
-        return TokenDTO(access_token=access_token, refresh_token=refresh_token)
+    async def register(self, dto: RegistrationDTO) -> UserDTO:
 
-    #TODO: Add registration endpoint
+        create_user_dto = CreateUserDTO(
+            name=dto.name,
+            login=dto.login,
+            email=dto.email,
+            password=dto.password,
+        )
 
-    async def register(self, form_data) -> TokenDTO:
-        ...
+        return await self.user_service.create(create_user_dto)

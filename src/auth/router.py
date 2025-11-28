@@ -1,28 +1,22 @@
-from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter
 
 from src.auth.dependencies.auth.service import IAuthService
-from src.auth.exceptions import UserNotFound
-from src.auth.dto import TokenDTO
+from src.auth.dto import TokenDTO, LoginDTO, UserDTO, RegistrationDTO
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/token", response_model=TokenDTO)
-async def login_for_access_token(
-        form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-        service: IAuthService
-):
+@router.post("/login", response_model=TokenDTO)
+async def login(dto: LoginDTO,service: IAuthService):
     """
     Provides access and refresh tokens for a valid user.
     """
-    try:
-        tokens = await service.login(form_data)
-        return tokens
-    except UserNotFound:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
+    return await service.login(dto)
+
+
+@router.post("/register", response_model=UserDTO)
+async def register(dto: RegistrationDTO, service: IAuthService):
+    """
+    Registers a new user via RegistrationDTO.
+    """
+    return await service.register(dto)

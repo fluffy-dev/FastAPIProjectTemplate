@@ -41,6 +41,7 @@ class UserDTO(BaseModel):
     """
     DTO for private view of a user's data, excluding sensitive details like the password.
     """
+    id: int
     name: Annotated[str, StringConstraints(max_length=30)]
     login: Annotated[str, StringConstraints(max_length=50)]
     email: EmailStr
