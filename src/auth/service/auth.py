@@ -1,7 +1,6 @@
 from typing import Optional
 
-from auth.dto import RegistrationDTO, CreateUserDTO
-from auth.entities import UserEntity
+from src.auth.dto import RegistrationDTO, CreateUserDTO
 from src.auth.exceptions.auth import CredentialsException
 from src.auth.dependencies.user.service import IUserService
 from src.auth.dto import FindUserDTO, UserDTO
