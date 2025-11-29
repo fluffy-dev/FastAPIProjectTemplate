@@ -4,7 +4,7 @@ from sqlalchemy import select, update
 from sqlalchemy.exc import IntegrityError
 
 from src.auth.entities import UserEntity
-from src.auth.exceptions import UserAlreadyExist, UserNotFound
+from src.auth.exceptions.user import UserAlreadyExist, UserNotFound
 from src.config.database.session import ISession
 from src.auth.models.user import UserModel
 from src.auth.dto import UpdateUserDTO, BaseUserDTO, FindUserDTO
