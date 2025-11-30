@@ -10,6 +10,8 @@ from src.lifespan import lifespan
 
 from src.middleware import init_middleware
 
+from src.exception_handlers import exception_handlers
+
 from src.routes import router
 
 
@@ -31,6 +33,7 @@ def get_app() -> FastAPI:
         docs_url=swagger_settings.docs_url if main_settings.debug else None,
         redoc_url=swagger_settings.redoc_url if main_settings.debug else None,
         openapi_url=f"{swagger_settings.docs_url}/openapi.json" if main_settings.debug else None,
+        exception_handlers=exception_handlers,
     )
 
     init_middleware(app)

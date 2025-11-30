@@ -6,3 +6,7 @@ class AlreadyExists(Exception):
 
 class NotFound(Exception):
     """Raised when object not found"""
+
+
+class PaginationError(Exception):
+    """Raised when pagination limit or offset incorrect"""

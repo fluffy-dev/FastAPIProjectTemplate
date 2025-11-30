@@ -1,7 +1,5 @@
 
 class InvalidSignatureError(Exception):
+    """Raised when credentials are invalid"""
     pass
 
-
-class DecodeError(Exception):
-    pass
