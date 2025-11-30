@@ -1,4 +1,6 @@
-from auth.dto import FindUserDTO
+from typing import Optional
+
+from src.auth.dto import FindUserDTO
 from src.auth.entities import UserEntity
 from src.auth.dependencies.user.repository import IUserRepository
 from src.auth.dto import BaseUserDTO, CreateUserDTO, UserDTO
@@ -27,13 +29,13 @@ class UserService:
             email=created_user.email,
         )
 
-    async def get(self, pk: int) -> BaseUserDTO:
+    async def get(self, pk: int) -> Optional[BaseUserDTO]:
         """
         Get a full user dto by its primary key.
         """
         return await self.repository.get(pk)
 
-    async def find(self, dto: FindUserDTO) -> UserDTO:
+    async def find(self, dto: FindUserDTO) -> Optional[UserDTO]:
         """
         Find user by FindUserDTO
         """
@@ -43,4 +45,4 @@ class UserService:
             name=user_dto.name,
             login=user_dto.login,
             email=user_dto.email,
-        )
+        ) if user_dto else None

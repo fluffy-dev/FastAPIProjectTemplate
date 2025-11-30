@@ -35,9 +35,6 @@ class AuthService:
         user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(login=dto.login))
 
         if not user:
-            user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(email=dto.login))
-
-        if not user:
             raise CredentialsException
 
         if not PasswordService.verify_password(dto.password, user.password):

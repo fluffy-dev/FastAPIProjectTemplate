@@ -38,18 +38,13 @@ class UserRepository:
 
     async def get(self, pk: int) -> Optional[BaseUserDTO]:
         instance = await self.session.get(UserModel, pk)
-        if instance is None:
-            raise UserNotFound
-
-        return self._get_dto(instance)
+        return self._get_dto(instance) if instance else None
 
     async def find(self, dto: FindUserDTO) -> Optional[BaseUserDTO]:
         stmt = select(UserModel).filter_by(**dto.model_dump(exclude_none=True))
         result = await self.session.execute(stmt)
         instance = result.scalar_one_or_none()
-        if instance is None:
-            raise UserNotFound
-        return self._get_dto(instance)
+        return self._get_dto(instance) if instance else None
 
     async def get_list(self, limit: int = 100, offset: int = 0) -> List[BaseUserDTO]:
         stmt = select(UserModel).offset(offset).limit(limit)
