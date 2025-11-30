@@ -35,14 +35,8 @@ class UserService:
         """
         return await self.repository.get(pk)
 
-    async def find(self, dto: FindUserDTO) -> Optional[UserDTO]:
+    async def find(self, dto: FindUserDTO) -> Optional[BaseUserDTO]:
         """
         Find user by FindUserDTO
         """
-        user_dto = await self.repository.find(dto)
-        return UserDTO(
-            id=user_dto.id,
-            name=user_dto.name,
-            login=user_dto.login,
-            email=user_dto.email,
-        ) if user_dto else None
+        return await self.repository.find(dto)
