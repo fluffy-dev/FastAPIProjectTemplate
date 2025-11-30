@@ -164,3 +164,26 @@ class TokenService:
             "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         return await self.encode_token(payload)
+
+    async def verify_refresh_token(self, token: str) -> dict:
+        """
+        Validates that a token is a valid Refresh Token.
+
+        This method decodes the token and specifically checks that the
+        'token_type' claim is set to "refresh".
+
+        Args:
+            token (str): The encoded JWT string.
+
+        Returns:
+            dict: The decoded payload if valid.
+
+        Raises:
+            InvalidTokenError: If the token is invalid, expired, or has the wrong type.
+        """
+        payload = await self.decode_token(token)
+
+        if payload.get("token_type") != "refresh":
+            raise InvalidTokenError("Invalid token type. Expected 'refresh'.")
+
+        return payload

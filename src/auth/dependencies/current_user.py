@@ -3,7 +3,7 @@ from fastapi import Depends, Cookie
 from src.auth.dependencies.token.service import ITokenService
 from src.auth.dependencies.user.service import IUserService
 from src.auth.dto import UserDTO
-from src.auth.exceptions.token import InvalidTokenError
+from src.auth.exceptions.token import InvalidTokenError, AccessTokenMissing
 
 async def get_current_user(
         user_service: IUserService,
@@ -31,9 +31,12 @@ async def get_current_user(
                            ID in the payload does not exist in the database.
     """
 
+    if access_token is None:
+        raise AccessTokenMissing()
+
     payload: dict = await token_service.decode_token(access_token)
 
-    user_id = payload.get("user").get("user_id")
+    user_id = payload.get("user", {}).get("user_id")
 
     if user_id is None:
         raise InvalidTokenError

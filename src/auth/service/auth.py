@@ -8,7 +8,8 @@ from src.auth.service.password import PasswordService
 from src.auth.dto import TokenDTO, LoginDTO
 
 from src.auth.dependencies.token.service import ITokenService
-
+from src.auth.exceptions.token import InvalidTokenError
+from src.auth.exceptions.user import UserNotFound
 
 
 class AuthService:
@@ -68,3 +69,43 @@ class AuthService:
         )
 
         return await self.user_service.create(create_user_dto)
+
+    async def refresh_session(self, refresh_token: str) -> TokenDTO:
+        """
+        Refreshes the user session using a valid refresh token.
+
+        1. Validates the refresh token signature and type.
+        2. Extracts the user ID.
+        3. Verifies the user still exists in the database.
+        4. Generates a fresh pair of Access and Refresh tokens.
+
+        Args:
+            refresh_token (str): The JWT refresh token string.
+
+        Returns:
+            TokenDTO: A new pair of tokens.
+
+        Raises:
+            InvalidTokenError: If token is invalid or expired.
+            UserNotFound: If the user ID in the token no longer exists.
+        """
+        payload = await self.token_service.verify_refresh_token(refresh_token)
+
+        user_data = payload.get("user", {})
+        user_id = user_data.get("user_id")
+
+        if not user_id:
+            raise InvalidTokenError("Token payload missing user_id")
+
+        user = await self.user_service.get(int(user_id))
+        if not user:
+            raise UserNotFound("User associated with this token no longer exists")
+
+        user_dto = UserDTO(
+            id=user.id,
+            name=user.name,
+            login=user.login,
+            email=user.email
+        )
+
+        return await self.token_service.create_tokens(user_dto)

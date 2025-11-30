@@ -1,6 +1,7 @@
 from fastapi import Request, status
 from fastapi.responses import JSONResponse
 
+from src.auth.exceptions.token import AccessTokenMissing, RefreshTokenMissing
 from src.libs.exceptions import NotFound, AlreadyExists, PaginationError
 from src.auth.exceptions.token import InvalidSignatureError
 from src.auth.exceptions.auth import CredentialsException
@@ -50,11 +51,24 @@ async def credentials_exception_handler(request: Request, exc: CredentialsExcept
         content={"detail": str(exc) or "Credentials error, login or password invalid."},
     )
 
-# Словарь для удобной регистрации обработчиков в приложении
+async def access_token_missing_handler(request: Request, exc: AccessTokenMissing):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": str(exc) or "Access token missing", "code": "access_token_missing"}
+    )
+
+async def refresh_token_missing_handler(request: Request, exc: RefreshTokenMissing):
+    return JSONResponse(
+        status_code=401,
+        content={"detail": str(exc) or "Refresh token missing", "code": "refresh_token_missing"}
+    )
+
 exception_handlers = {
     NotFound: not_found_exception_handler,
     AlreadyExists: already_exists_exception_handler,
     PaginationError: pagination_exception_handler,
     InvalidSignatureError: token_invalid_signature_exception_handler,
     CredentialsException: credentials_exception_handler,
+    AccessTokenMissing: access_token_missing_handler,
+    RefreshTokenMissing: refresh_token_missing_handler,
 }
