@@ -2,6 +2,7 @@ from fastapi import APIRouter, Response
 
 from src.auth.dependencies.auth.service import IAuthService
 from src.auth.dto import TokenDTO, LoginDTO, UserDTO, RegistrationDTO
+from src.auth.dependencies.current_user import ICurrentUser
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -37,3 +38,10 @@ async def register(dto: RegistrationDTO, service: IAuthService):
     Registers a new user via RegistrationDTO.
     """
     return await service.register(dto)
+
+@router.get("/me", response_model=UserDTO, summary="Get current user profile")
+async def read_users_me(current_user: ICurrentUser):
+    """
+    Get current user profile.
+    """
+    return current_user
