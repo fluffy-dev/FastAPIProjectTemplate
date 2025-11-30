@@ -31,8 +31,10 @@ async def get_current_user(
 
     user_id = payload.get("user").get("user_id")
 
-    if user_id is None or not isinstance(user_id, int):
+    if user_id is None:
         raise InvalidTokenError
+
+    user_id = int(user_id)
 
     user = await user_service.get(user_id)
 
