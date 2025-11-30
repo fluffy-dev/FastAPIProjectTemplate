@@ -1,13 +1,15 @@
-from typing import Annotated
-from fastapi import Depends, HTTPException, status
+from typing import Annotated, Union
+from fastapi import Depends, Cookie
+from src.auth.dependencies.token.service import ITokenService
+from src.auth.dependencies.user.service import IUserService
+from src.auth.dto import UserDTO
+from src.auth.exceptions.token import InvalidTokenError
 
-from src.auth.service.token import TokenService
-from src.auth.dependencies.user_repository import IUserRepository
-from src.auth.dto import BaseUserDTO, AccessTokenDTO
-from src.auth.exceptions import UserNotFound
-
-
-async def get_current_user(token: AccessTokenDTO, user_repo: IUserRepository) -> BaseUserDTO:
+async def get_current_user(
+        user_service: IUserService,
+        token_service: ITokenService,
+        access_token: Annotated[Union[str, None], Cookie()] = None
+) -> UserDTO:
     """
     Dependency to get the current user from a JWT token.
 
@@ -16,25 +18,32 @@ async def get_current_user(token: AccessTokenDTO, user_repo: IUserRepository) ->
 
     Raises:
         HTTPException(401): If the token is invalid or the user is not found.
+
+
+    The payload includes:
+        - `token_type`: Set to "access" or "refresh".
+        - `user`: A dictionary containing `user_id` and `user_name` from the DTO.
+        - `exp`: Expiration timestamp based on `access_token_lifetime` or `refresh_token_lifetime`.
+        - `iat`: Issued-at timestamp.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+
+    payload: dict = await token_service.decode_token(access_token)
+
+    user_id = payload.get("user").get("user_id")
+
+    if user_id is None or not isinstance(user_id, int):
+        raise InvalidTokenError
+
+    user = await user_service.get(user_id)
+
+    if user is None:
+        raise InvalidTokenError
+
+    return UserDTO(
+        id=user.id,
+        name=user.name,
+        login=user.login,
+        email=user.email,
     )
 
-    access_token = token.access_token
-
-    payload = TokenService.verify_token(access_token)
-
-    if payload is None or payload.sub is None:
-        raise credentials_exception
-
-    user_id = int(payload.sub)
-    try:
-        user = await user_repo.get(user_id) #TODO restrict using repository from interface level, instead use service
-        return user
-    except UserNotFound:
-        raise credentials_exception
-
-ICurrentUser: type[BaseUserDTO] = Annotated[BaseUserDTO, Depends(get_current_user)]
+ICurrentUser: type[UserDTO] = Annotated[UserDTO, Depends(get_current_user)]
