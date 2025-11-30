@@ -129,12 +129,13 @@ class TokenService:
         Returns:
             str: The encoded access token.
         """
-        expire = datetime.now() + timedelta(seconds=self.access_token_lifetime)
+        now = datetime.now()
+        expire = now + timedelta(seconds=self.access_token_lifetime)
         payload = {
             "token_type": "access",
             "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
-            "exp": str(expire),
-            "iat": str(datetime.now()),
+            "exp": int(expire.timestamp()),
+            "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         return await self.encode_token(payload)
 
@@ -154,11 +155,12 @@ class TokenService:
         Returns:
             str: The encoded refresh token.
         """
-        expire = datetime.now() + timedelta(seconds=self.refresh_token_lifetime)
+        now = datetime.now()
+        expire = now + timedelta(seconds=self.access_token_lifetime)
         payload = {
             "token_type": "access",
             "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
-            "exp": str(expire),
-            "iat": str(datetime.now()),
+            "exp": int(expire.timestamp()),
+            "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         return await self.encode_token(payload)
