@@ -11,20 +11,24 @@ async def get_current_user(
         access_token: Annotated[Union[str, None], Cookie()] = None
 ) -> UserDTO:
     """
-    Dependency to get the current user from a JWT token.
+    FastAPI Dependency to retrieve the authenticated user from a Cookie.
 
-    Verifies the token, extracts the user ID, and fetches the user
-    from the database.
+    1. Extracts the 'access_token' cookie.
+    2. Decodes and verifies the JWT signature and expiration.
+    3. Extracts the 'user_id' from the token payload.
+    4. Fetches the full user record from the database.
+
+    Args:
+        user_service (IUserService): Service to fetch user data.
+        token_service (ITokenService): Service to decode tokens.
+        access_token (str, optional): The JWT string extracted from cookies.
+
+    Returns:
+        UserDTO: The authenticated user's data.
 
     Raises:
-        HTTPException(401): If the token is invalid or the user is not found.
-
-
-    The payload includes:
-        - `token_type`: Set to "access" or "refresh".
-        - `user`: A dictionary containing `user_id` and `user_name` from the DTO.
-        - `exp`: Expiration timestamp based on `access_token_lifetime` or `refresh_token_lifetime`.
-        - `iat`: Issued-at timestamp.
+        InvalidTokenError: If the token is missing, invalid, expired, or the user
+                           ID in the payload does not exist in the database.
     """
 
     payload: dict = await token_service.decode_token(access_token)

@@ -13,7 +13,7 @@ from src.auth.dependencies.token.service import ITokenService
 
 class AuthService:
     """
-    Service layer for authentication logic.
+    Service layer responsible for high-level authentication flows.
     """
     def __init__(self, user_service: IUserService, token_service: ITokenService):
         self.user_service = user_service
@@ -21,16 +21,20 @@ class AuthService:
 
     async def login(self, dto: LoginDTO) -> TokenDTO:
         """
-        Authenticates a user and issues JWT tokens.
+        Authenticates a user and generates JWT tokens.
+
+        1. Finds the user by login.
+        2. Verifies the provided password against the stored hash.
+        3. Generates access and refresh tokens.
 
         Args:
-            dto: The user's login and password.
+            dto (LoginDTO): The login credentials (username/email and password).
 
         Returns:
-            TokenDTO: A DTO containing the access and refresh tokens.
+            TokenDTO: The generated access and refresh tokens.
 
         Raises:
-            CredentialsException: If the user does not exist or password is incorrect.
+            CredentialsException: If the user is not found or the password is incorrect.
         """
         user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(login=dto.login))
 
@@ -44,7 +48,18 @@ class AuthService:
         return await self.token_service.create_tokens(user)
 
     async def register(self, dto: RegistrationDTO) -> UserDTO:
+        """
+        Registers a new user in the system.
 
+        Maps the RegistrationDTO to a CreateUserDTO and delegates creation
+        to the UserService.
+
+        Args:
+            dto (RegistrationDTO): The registration details.
+
+        Returns:
+            UserDTO: The newly created user profile (safe view).
+        """
         create_user_dto = CreateUserDTO(
             name=dto.name,
             login=dto.login,
