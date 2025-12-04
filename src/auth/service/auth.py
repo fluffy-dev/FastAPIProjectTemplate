@@ -134,3 +134,23 @@ class AuthService:
         )
 
         return None
+
+    async def logout_all_sessions_for_user(self, refresh_token: str) -> None:
+        payload = await self.token_service.verify_refresh_token(refresh_token)
+
+        user_id = payload.get("sub")
+        jti = payload.get("jti")
+        if not user_id or not jti:
+            raise InvalidTokenError("Token payload invalid")
+
+        user_id = int(user_id)
+
+        user = await self.user_service.get(user_id)
+
+        if not user:
+            raise UserNotFound("User associated with this token no longer exists")
+
+        await self.session_service.delete_all_for_user(user_id)
+
+        return None
+
