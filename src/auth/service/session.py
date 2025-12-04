@@ -33,3 +33,6 @@ class SessionService:
 
     async def delete_by_jti(self, jti: str):
         return await self.repository.delete_by_jti(jti)
+
+    async def delete_all_for_user(self, user_id: int) -> None:
+        return await self.repository.delete_all_for_user(user_id)
