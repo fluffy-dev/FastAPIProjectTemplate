@@ -1,6 +1,6 @@
 from typing import Optional, List
 
-from sqlalchemy import select, update
+from sqlalchemy import select, update, delete
 from sqlalchemy.exc import IntegrityError
 
 from src.auth.entities import UserEntity
@@ -122,6 +122,11 @@ class UserRepository:
         if instance is None:
             raise UserNotFound
         return self._get_dto(instance)
+
+    async def delete(self, pk: int) -> None:
+        stmt = delete(UserModel).where(UserModel.id == pk)
+        await self.session.execute(stmt)
+        await self.session.commit()
 
     @staticmethod
     def _get_dto(instance: UserModel) -> BaseUserDTO:
