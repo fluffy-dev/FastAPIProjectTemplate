@@ -1,7 +1,10 @@
+import uuid
+
 from jwt import ExpiredSignatureError, PyJWTError, decode, encode, get_unverified_header
 from datetime import datetime, timedelta
 
-from src.auth.dto import TokenDTO, UserDTO
+
+from src.auth.dto import UserDTO, RefreshTokenDTO, AccessTokenDTO, BaseUserDTO
 from src.config.jwt import settings as jwt_settings
 from src.config.security import settings as security_settings
 from src.auth.exceptions.token import InvalidSignatureError, InvalidTokenError
@@ -33,21 +36,6 @@ class TokenService:
         self.refresh_token_lifetime = jwt_settings.refresh_token_lifetime_seconds
         self.secret_key = security_settings.secret_key
         self.algorithm = security_settings.algorithm
-
-    async def create_tokens(self, dto: UserDTO) -> TokenDTO:
-        """
-        Generates a pair of access and refresh tokens for a specific user.
-
-        Args:
-            dto (UserDTO): The Data Transfer Object containing user information
-                           (specifically id and name) required for the token payload.
-
-        Returns:
-            TokenDTO: A DTO containing both the `access_token` and `refresh_token`.
-        """
-        access_token = await self.generate_access_token(dto)
-        refresh_token = await self.generate_refresh_token(dto)
-        return TokenDTO(access_token=access_token, refresh_token=refresh_token)
 
     def _validate_token(self, token: str) -> str:
         """
@@ -113,7 +101,7 @@ class TokenService:
         except PyJWTError:
             raise InvalidTokenError("Token is invalid")
 
-    async def generate_access_token(self, dto: UserDTO) -> str:
+    async def generate_access_token(self, dto: BaseUserDTO) -> AccessTokenDTO:
         """
         Constructs the payload and generates an encoded access token.
 
@@ -133,13 +121,14 @@ class TokenService:
         expire = now + timedelta(seconds=self.access_token_lifetime)
         payload = {
             "token_type": "access",
-            "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
+            "sub": str(dto.id),
             "exp": int(expire.timestamp()),
             "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
-        return await self.encode_token(payload)
+        token = await self.encode_token(payload)
+        return AccessTokenDTO(token=token)
 
-    async def generate_refresh_token(self, dto: UserDTO) -> str:
+    async def generate_refresh_token(self, dto: BaseUserDTO) -> RefreshTokenDTO:
         """
         Constructs the payload and generates an encoded refresh token.
 
@@ -157,13 +146,16 @@ class TokenService:
         """
         now = datetime.now()
         expire = now + timedelta(seconds=self.refresh_token_lifetime)
+        jti = str(uuid.uuid4())
         payload = {
             "token_type": "refresh",
-            "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
+            "sub": str(dto.id),
             "exp": int(expire.timestamp()),
             "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
+            "jti": jti,
         }
-        return await self.encode_token(payload)
+        token = await self.encode_token(payload)
+        return RefreshTokenDTO(token=token, jti=jti, expire=expire)
 
     async def verify_refresh_token(self, token: str) -> dict:
         """
@@ -185,5 +177,28 @@ class TokenService:
 
         if payload.get("token_type") != "refresh":
             raise InvalidTokenError("Invalid token type. Expected 'refresh'.")
+
+        return payload
+
+    async def verify_access_token(self, token: str) -> dict:
+        """
+        Validates that a token is a valid Access Token.
+
+        This method decodes the token and specifically checks that the
+        'token_type' claim is set to "access".
+
+        Args:
+            token (str): The encoded JWT string.
+
+        Returns:
+            dict: The decoded payload if valid.
+
+        Raises:
+            InvalidTokenError: If the token is invalid, expired, or has the wrong type.
+        """
+        payload = await self.decode_token(token)
+
+        if payload.get("token_type") != "access":
+            raise InvalidTokenError("Invalid token type. Expected 'access'.")
 
         return payload
