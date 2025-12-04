@@ -36,7 +36,7 @@ async def get_current_user(
 
     payload: dict = await token_service.decode_token(access_token)
 
-    user_id = payload.get("user", {}).get("user_id")
+    user_id = payload.get("sub")
 
     if user_id is None:
         raise InvalidTokenError
