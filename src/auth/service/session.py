@@ -1,4 +1,5 @@
 from typing import Optional
+from datetime import datetime
 
 from src.auth.dto import CreateSessionDTO, SessionDTO
 from src.auth.entities import SessionEntity
@@ -9,7 +10,6 @@ class SessionService:
     def __init__(self, repository: ISessionRepository):
         self.repository = repository
 
-# meow
     async def create(self, dto: CreateSessionDTO):
         session_entity = SessionEntity(
             user_id = dto.user_id,
@@ -22,3 +22,11 @@ class SessionService:
 
     async def get_by_jti(self, jti: str) -> Optional[SessionDTO]:
         return await self.repository.get_by_jti(jti)
+
+
+    async def update_jti(self, old_jti: str, new_jti: str, new_expires_at: datetime):
+        return await self.repository.update_jti(
+            old_jti=old_jti,
+            new_jti=new_jti,
+            new_expires_at=new_expires_at,
+        )
