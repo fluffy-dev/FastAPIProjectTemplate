@@ -30,3 +30,6 @@ class SessionService:
             new_jti=new_jti,
             new_expires_at=new_expires_at,
         )
+
+    async def delete_by_jti(self, jti: str):
+        return await self.repository.delete_by_jti(jti)
