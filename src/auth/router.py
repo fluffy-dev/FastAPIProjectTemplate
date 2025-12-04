@@ -7,17 +7,21 @@ from src.auth.dependencies.auth.service import IAuthService
 from src.auth.dto import TokenPairDTO, LoginDTO, UserDTO, RegistrationDTO, UserSessionInfoDTO
 from src.auth.dependencies.current_user import ICurrentUser
 from src.config.jwt import settings as jwt_settings
-
+from src.auth.service.cookie import set_auth_cookies, clear_auth_cookies
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=TokenPairDTO)
+
+@router.post(
+    "/login",
+    response_model=None,
+)
 async def login(
-        response: Response,
-        request: Request,
-        dto: LoginDTO,
-        service: IAuthService,
-        user_agent: Annotated[Union[str, None], Header()] = None
+    response: Response,
+    request: Request,
+    dto: LoginDTO,
+    service: IAuthService,
+    user_agent: Annotated[str | None, Header()] = None,
 ):
     """
     Authenticates a user and sets secure cookies.
@@ -36,32 +40,19 @@ async def login(
     Returns:
         TokenDTO: The access and refresh tokens.
     """
-    tokens = await service.login(dto, UserSessionInfoDTO(
+    session_info = UserSessionInfoDTO(
         user_agent=user_agent,
-        ip_address=request.client.host,
-    ))
-
-
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=jwt_settings.access_token_expire_seconds
+        ip_address=request.client.host if request.client else None,
     )
 
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=jwt_settings.refresh_token_rotate_min_lifetime
+    tokens = await service.login(
+        login_dto=dto,
+        user_session_dto=session_info
     )
+
+    set_auth_cookies(response, tokens)
 
     return tokens
-
 
 @router.post("/register", response_model=UserDTO)
 async def register(dto: RegistrationDTO, service: IAuthService):
@@ -93,7 +84,7 @@ async def read_users_me(current_user: ICurrentUser):
     return current_user
 
 @router.post("/refresh", response_model=TokenPairDTO)
-async def refresh_token(
+async def refresh(
         response: Response,
         service: IAuthService,
         refresh_token: Annotated[Union[str, None], Cookie()] = None
@@ -120,22 +111,22 @@ async def refresh_token(
 
     new_tokens = await service.refresh_session(refresh_token)
 
-    response.set_cookie(
-        key="access_token",
-        value=new_tokens.access_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=jwt_settings.access_token_expire_seconds
-    )
-
-    response.set_cookie(
-        key="refresh_token",
-        value=new_tokens.refresh_token,
-        httponly=True,
-        secure=True,
-        samesite="lax",
-        max_age=jwt_settings.refresh_token_rotate_min_lifetime
-    )
+    set_auth_cookies(response, new_tokens)
 
     return new_tokens
+
+@router.post("/logout")
+async def logout(
+        response: Response,
+        service: IAuthService,
+        refresh_token: Annotated[Union[str, None], Cookie()] = None
+):
+    """
+    Logs out the user by revoking the specific session.
+    """
+
+    if refresh_token:
+        await service.logout(refresh_token)
+
+    clear_auth_cookies(response)
+    return {"message": "Logged out successfully"}

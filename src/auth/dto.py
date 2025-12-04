@@ -148,8 +148,8 @@ class UserSessionInfoDTO(BaseModel):
         user_agent: Client browser info.
         ip_address: Client IP address.
     """
-    user_agent: str | None = None
-    ip_address: str | None = None
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
 
 
 class SessionDTO(BaseModel):
@@ -170,8 +170,8 @@ class SessionDTO(BaseModel):
     refresh_token_jti: str
     expires_at: datetime
     created_at: datetime
-    user_agent: str | None = None
-    ip_address: str | None = None
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
 
 
 class CreateSessionDTO(BaseModel):
@@ -188,5 +188,5 @@ class CreateSessionDTO(BaseModel):
     user_id: int
     refresh_token_jti: str
     expires_at: datetime
-    user_agent: str | None = None
-    ip_address: str | None = None
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None

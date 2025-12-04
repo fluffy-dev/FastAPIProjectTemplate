@@ -55,7 +55,7 @@ class AuthService:
         session_dto = CreateSessionDTO(
             user_id = user.id,
             refresh_token_jti=refresh_token.jti,
-            expires_at=refresh_token.expires_at,
+            expires_at=refresh_token.expire,
             user_agent=user_session_dto.user_agent,
             ip_address=user_session_dto.ip_address,
         )
@@ -113,10 +113,24 @@ class AuthService:
         await self.session_service.update_jti(
             old_jti=jti,
             new_jti=refresh_token.jti,
-            new_expires_at=refresh_token.expires_at,
+            new_expires_at=refresh_token.expire,
         )
 
         return TokenPairDTO(
             access_token=access_token.token,
             refresh_token=refresh_token.token,
         )
+
+    async def logout(self, refresh_token: str) -> None:
+        payload = await self.token_service.verify_refresh_token(refresh_token)
+
+        jti = payload.get("jti")
+
+        if not jti:
+            raise InvalidTokenError("Token payload invalid")
+
+        await self.session_service.delete_by_jti(
+            jti=jti
+        )
+
+        return None
