@@ -130,3 +130,19 @@ async def logout(
 
     clear_auth_cookies(response)
     return {"message": "Logged out successfully"}
+
+
+@router.post("/logout_all_sessions")
+async def logout_all_sessions(
+        response: Response,
+        service: IAuthService,
+        refresh_token: Annotated[Union[str, None], Cookie()] = None
+):
+    """
+    Logs out all user sessions.
+    """
+    if refresh_token:
+        await service.logout_all_sessions_for_user(refresh_token)
+
+    clear_auth_cookies(response)
+    return {"message": "Logged out successfully"}
