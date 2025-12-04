@@ -1,18 +1,24 @@
 from typing import Annotated, Union
 
-from fastapi import APIRouter, Response, Cookie
+from fastapi import APIRouter, Response, Cookie, Request, Header
 
 from src.auth.exceptions.token import RefreshTokenMissing
 from src.auth.dependencies.auth.service import IAuthService
-from src.auth.dto import TokenDTO, LoginDTO, UserDTO, RegistrationDTO
+from src.auth.dto import TokenPairDTO, LoginDTO, UserDTO, RegistrationDTO, UserSessionInfoDTO
 from src.auth.dependencies.current_user import ICurrentUser
 from src.config.jwt import settings as jwt_settings
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 
-@router.post("/login", response_model=TokenDTO)
-async def login(response: Response, dto: LoginDTO, service: IAuthService):
+@router.post("/login", response_model=TokenPairDTO)
+async def login(
+        response: Response,
+        request: Request,
+        dto: LoginDTO,
+        service: IAuthService,
+        user_agent: Annotated[Union[str, None], Header()] = None
+):
     """
     Authenticates a user and sets secure cookies.
 
@@ -24,11 +30,16 @@ async def login(response: Response, dto: LoginDTO, service: IAuthService):
         response (Response): FastAPI response object used to set cookies.
         dto (LoginDTO): The user credentials.
         service (IAuthService): The authentication service dependency.
+        request (Request): The incoming HTTP request.
+        user_agent (Headers): data about user client.
 
     Returns:
         TokenDTO: The access and refresh tokens.
     """
-    tokens = await service.login(dto)
+    tokens = await service.login(dto, UserSessionInfoDTO(
+        user_agent=user_agent,
+        ip_address=request.client.host,
+    ))
 
 
     response.set_cookie(
@@ -81,7 +92,7 @@ async def read_users_me(current_user: ICurrentUser):
     """
     return current_user
 
-@router.post("/refresh", response_model=TokenDTO)
+@router.post("/refresh", response_model=TokenPairDTO)
 async def refresh_token(
         response: Response,
         service: IAuthService,
