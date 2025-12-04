@@ -140,7 +140,7 @@ class RegistrationDTO(BaseModel):
 
 
 #Session
-class UserSessionDTO(BaseModel):
+class UserSessionInfoDTO(BaseModel):
     """
     Data Transfer Object for User Session requests.
 
