@@ -6,7 +6,6 @@ from src.auth.exceptions.token import RefreshTokenMissing
 from src.auth.dependencies.auth.service import IAuthService
 from src.auth.dto import TokenPairDTO, LoginDTO, UserDTO, RegistrationDTO, UserSessionInfoDTO
 from src.auth.dependencies.current_user import ICurrentUser
-from src.config.jwt import settings as jwt_settings
 from src.auth.service.cookie import set_auth_cookies, clear_auth_cookies
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -14,7 +13,7 @@ router = APIRouter(prefix="/auth", tags=["Authentication"])
 
 @router.post(
     "/login",
-    response_model=None,
+    response_model=TokenPairDTO,
 )
 async def login(
     response: Response,
