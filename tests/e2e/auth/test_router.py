@@ -13,7 +13,7 @@ async def test_register_user_endpoint(client: AsyncClient, db_session):
     Verifies the /auth/register endpoint creates a user and returns the public DTO.
     """
     # Arrange
-    payload = RegistrationDTOFactory.build()
+    payload = RegistrationDTOFactory.build(password="secure123123..")
     data = payload.model_dump()
     data['email'] = str(payload.email)  # Ensure email is string
 
