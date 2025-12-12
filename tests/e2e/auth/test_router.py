@@ -1,3 +1,5 @@
+import asyncio
+
 import pytest
 from httpx import AsyncClient
 from sqlalchemy import select
@@ -103,6 +105,8 @@ async def test_refresh_token_flow(client: AsyncClient, db_session):
     # 3. Call Refresh Endpoint (client automatically sends cookies from jar)
     # We clear the access token to simulate expiration, but keep refresh token
     del client.cookies["access_token"]
+
+    await asyncio.sleep(1) # to imitate time delta
 
     refresh_resp = await client.post("/v1/auth/refresh")
 
