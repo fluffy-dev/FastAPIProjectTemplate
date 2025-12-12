@@ -30,14 +30,13 @@ async def login(response: Response, dto: LoginDTO, service: IAuthService):
     """
     tokens = await service.login(dto)
 
-
     response.set_cookie(
         key="access_token",
         value=tokens.access_token,
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=jwt_settings.access_token_expire_seconds
+        max_age=jwt_settings.access_token_expire_seconds,
     )
 
     response.set_cookie(
@@ -46,7 +45,7 @@ async def login(response: Response, dto: LoginDTO, service: IAuthService):
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=jwt_settings.refresh_token_rotate_min_lifetime
+        max_age=jwt_settings.refresh_token_rotate_min_lifetime,
     )
 
     return tokens
@@ -66,6 +65,7 @@ async def register(dto: RegistrationDTO, service: IAuthService):
     """
     return await service.register(dto)
 
+
 @router.get("/me", response_model=UserDTO, summary="Get current user profile")
 async def read_users_me(current_user: ICurrentUser):
     """
@@ -81,11 +81,12 @@ async def read_users_me(current_user: ICurrentUser):
     """
     return current_user
 
+
 @router.post("/refresh", response_model=TokenDTO)
 async def refresh_token(
-        response: Response,
-        service: IAuthService,
-        refresh_token: Annotated[Union[str, None], Cookie()] = None
+    response: Response,
+    service: IAuthService,
+    refresh_token: Annotated[Union[str, None], Cookie()] = None,
 ):
     """
     Refreshes the Access Token using a HttpOnly Refresh Token.
@@ -115,7 +116,7 @@ async def refresh_token(
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=jwt_settings.access_token_expire_seconds
+        max_age=jwt_settings.access_token_expire_seconds,
     )
 
     response.set_cookie(
@@ -124,7 +125,7 @@ async def refresh_token(
         httponly=True,
         secure=True,
         samesite="lax",
-        max_age=jwt_settings.refresh_token_rotate_min_lifetime
+        max_age=jwt_settings.refresh_token_rotate_min_lifetime,
     )
 
     return new_tokens

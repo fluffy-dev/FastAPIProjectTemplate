@@ -16,6 +16,7 @@ class AuthService:
     """
     Service layer responsible for high-level authentication flows.
     """
+
     def __init__(self, user_service: IUserService, token_service: ITokenService):
         self.user_service = user_service
         self.token_service = token_service
@@ -37,7 +38,9 @@ class AuthService:
         Raises:
             CredentialsException: If the user is not found or the password is incorrect.
         """
-        user: Optional[UserDTO] = await self.user_service.find(FindUserDTO(login=dto.login))
+        user: Optional[UserDTO] = await self.user_service.find(
+            FindUserDTO(login=dto.login)
+        )
 
         if not user or not PasswordService.verify_password(dto.password, user.password):
             raise CredentialsException
@@ -99,10 +102,7 @@ class AuthService:
             raise UserNotFound("User associated with this token no longer exists")
 
         user_dto = UserDTO(
-            id=user.id,
-            name=user.name,
-            login=user.login,
-            email=user.email
+            id=user.id, name=user.name, login=user.login, email=user.email
         )
 
         return await self.token_service.create_tokens(user_dto)

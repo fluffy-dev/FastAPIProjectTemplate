@@ -7,6 +7,7 @@ from src.auth.models.user import UserModel
 
 class RegistrationDTOFactory(ModelFactory[RegistrationDTO]):
     """Factory for generating RegistrationDTO payloads."""
+
     __model__ = RegistrationDTO
 
     @classmethod
@@ -18,19 +19,23 @@ class RegistrationDTOFactory(ModelFactory[RegistrationDTO]):
 
 class UserDTOFactory(ModelFactory[UserDTO]):
     """Factory for public UserDTO objects (No password)."""
+
     __model__ = UserDTO
 
 
 class BaseUserDTOFactory(ModelFactory[BaseUserDTO]):
     """Factory for internal BaseUserDTO objects (With password)."""
+
     __model__ = BaseUserDTO
 
 
 class TokenDTOFactory(ModelFactory[TokenDTO]):
     """Factory for generating TokenDTO objects."""
+
     __model__ = TokenDTO
 
 
 class UserModelFactory(SQLAlchemyFactory[UserModel]):
     """Factory for generating SQLAlchemy User models."""
+
     __model__ = UserModel

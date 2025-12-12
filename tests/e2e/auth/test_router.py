@@ -17,7 +17,7 @@ async def test_register_user_endpoint(client: AsyncClient, db_session):
     # Arrange
     payload = RegistrationDTOFactory.build(password="secure123123..")
     data = payload.model_dump()
-    data['email'] = str(payload.email)  # Ensure email is string
+    data["email"] = str(payload.email)  # Ensure email is string
 
     # Act
     response = await client.post("/v1/auth/register", json=data)
@@ -42,19 +42,15 @@ async def test_login_sets_cookies(client: AsyncClient, db_session):
     password = "securePassword123"
     hashed = PasswordService.get_password_hash(password)
     user = UserModel(
-        name="Login User",
-        login="login_user",
-        email="login@test.com",
-        password=hashed
+        name="Login User", login="login_user", email="login@test.com", password=hashed
     )
     db_session.add(user)
     await db_session.commit()
 
     # Act
-    response = await client.post("/v1/auth/login", json={
-        "login": "login_user",
-        "password": password
-    })
+    response = await client.post(
+        "/v1/auth/login", json={"login": "login_user", "password": password}
+    )
 
     # Assert
     assert response.status_code == 200
@@ -89,16 +85,15 @@ async def test_refresh_token_flow(client: AsyncClient, db_session):
         name="Refresher",
         login="refresher",
         email="refresh@test.com",
-        password=PasswordService.get_password_hash(password)
+        password=PasswordService.get_password_hash(password),
     )
     db_session.add(user)
     await db_session.commit()
 
     # 2. Login to get initial cookies
-    login_resp = await client.post("/v1/auth/login", json={
-        "login": "refresher",
-        "password": password
-    })
+    login_resp = await client.post(
+        "/v1/auth/login", json={"login": "refresher", "password": password}
+    )
     original_access = login_resp.cookies["access_token"]
     original_refresh = login_resp.cookies["refresh_token"]
 
@@ -106,7 +101,7 @@ async def test_refresh_token_flow(client: AsyncClient, db_session):
     # We clear the access token to simulate expiration, but keep refresh token
     del client.cookies["access_token"]
 
-    await asyncio.sleep(1) # to imitate time delta
+    await asyncio.sleep(1)  # to imitate time delta
 
     refresh_resp = await client.post("/v1/auth/refresh")
 

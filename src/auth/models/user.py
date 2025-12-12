@@ -19,6 +19,7 @@ class UserModel(Base):
                              Indexed and Unique constraint applied.
         password (Mapped[str]): The hashed password string. Max length 255.
     """
+
     __tablename__ = "users"
 
     name: Mapped[str] = mapped_column(String(30))

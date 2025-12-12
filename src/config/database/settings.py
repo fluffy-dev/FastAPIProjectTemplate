@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> PostgresDsn | str:
-        """ URL to connect (DSN)"""
+        """URL to connect (DSN)"""
         return (
             f"{self.db_url_scheme}://{self.db_user}:{self.db_password}@"
             f"{self.db_host}:{self.db_port}/{self.db_name}"

@@ -2,12 +2,11 @@ import pytest
 import jwt
 from datetime import datetime, timedelta
 from src.auth.service.token import TokenService
-from src.auth.exceptions.token import InvalidTokenError, InvalidSignatureError
+from src.auth.exceptions.token import InvalidTokenError
 from src.auth.dto import UserDTO
 
 # Mock settings just for this test file
 from src.config.security import settings as security_settings
-from src.config.jwt import settings as jwt_settings
 
 
 @pytest.fixture
@@ -22,7 +21,9 @@ async def test_generate_access_token_structure(token_service):
     token = await token_service.generate_access_token(user_dto)
 
     # Manually decode to check payload without verification first
-    payload = jwt.decode(token, security_settings.secret_key, algorithms=[security_settings.algorithm])
+    payload = jwt.decode(
+        token, security_settings.secret_key, algorithms=[security_settings.algorithm]
+    )
 
     assert payload["token_type"] == "access"
     assert payload["user"]["user_id"] == "123"
@@ -44,11 +45,7 @@ async def test_decode_expired_token(token_service, mocker):
     # 1. Generate a token that is already expired
     # We cheat by manually encoding a payload with past time
     past = datetime.now() - timedelta(hours=1)
-    payload = {
-        "token_type": "access",
-        "exp": int(past.timestamp()),
-        "user": {}
-    }
+    payload = {"token_type": "access", "exp": int(past.timestamp()), "user": {}}
     expired_token = await token_service.encode_token(payload)
 
     # 2. Attempt to decode

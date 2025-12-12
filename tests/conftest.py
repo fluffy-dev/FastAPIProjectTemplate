@@ -12,17 +12,13 @@ from src.config.database.engine import db_helper
 TEST_DATABASE_URL = "sqlite+aiosqlite:///:memory:"
 
 engine = create_async_engine(
-    TEST_DATABASE_URL,
-    connect_args={"check_same_thread": False},
-    poolclass=None
+    TEST_DATABASE_URL, connect_args={"check_same_thread": False}, poolclass=None
 )
 
 TestingSessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autoflush=False
+    bind=engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
 )
+
 
 @pytest.fixture(scope="session")
 def event_loop():
@@ -32,6 +28,7 @@ def event_loop():
     loop = asyncio.get_event_loop_policy().new_event_loop()
     yield loop
     loop.close()
+
 
 @pytest.fixture(scope="function")
 async def db_session() -> AsyncGenerator[AsyncSession, None]:
@@ -49,6 +46,7 @@ async def db_session() -> AsyncGenerator[AsyncSession, None]:
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.drop_all)
 
+
 @pytest.fixture(scope="function")
 async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
     """
@@ -56,12 +54,15 @@ async def client(db_session) -> AsyncGenerator[AsyncClient, None]:
 
     Overrides the production database dependency with the test session.
     """
+
     async def override_get_db():
         yield db_session
 
     app.dependency_overrides[db_helper.get_session] = override_get_db
 
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="https://test") as c:
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="https://test"
+    ) as c:
         yield c
 
     app.dependency_overrides.clear()

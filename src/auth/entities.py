@@ -8,6 +8,7 @@ class UserEntity:
     Used for data transfer between Service and Repository layers to decouple
     business logic from specific database implementations or API schemas.
     """
+
     name: str
     login: str
     email: str

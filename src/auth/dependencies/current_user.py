@@ -5,10 +5,11 @@ from src.auth.dependencies.user.service import IUserService
 from src.auth.dto import UserDTO
 from src.auth.exceptions.token import InvalidTokenError, AccessTokenMissing
 
+
 async def get_current_user(
-        user_service: IUserService,
-        token_service: ITokenService,
-        access_token: Annotated[Union[str, None], Cookie()] = None
+    user_service: IUserService,
+    token_service: ITokenService,
+    access_token: Annotated[Union[str, None], Cookie()] = None,
 ) -> UserDTO:
     """
     FastAPI Dependency to retrieve the authenticated user from a Cookie.
@@ -54,5 +55,6 @@ async def get_current_user(
         login=user.login,
         email=user.email,
     )
+
 
 ICurrentUser: type[UserDTO] = Annotated[UserDTO, Depends(get_current_user)]

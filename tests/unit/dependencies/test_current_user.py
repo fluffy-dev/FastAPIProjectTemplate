@@ -21,7 +21,9 @@ async def test_get_current_user_success():
 
     # Act
     # We call the function directly as if FastAPI invoked it
-    result = await get_current_user(mock_user_service, mock_token_service, access_token=token)
+    result = await get_current_user(
+        mock_user_service, mock_token_service, access_token=token
+    )
 
     # Assert
     assert result == expected_user

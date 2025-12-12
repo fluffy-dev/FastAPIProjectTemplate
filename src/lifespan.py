@@ -2,9 +2,8 @@ from fastapi import FastAPI
 
 
 async def lifespan(app: FastAPI):
-
-    #Before app startup
+    # Before app startup
 
     yield
 
-    #After app startup
+    # After app startup

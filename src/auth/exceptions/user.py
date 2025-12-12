@@ -10,6 +10,7 @@ class UserAlreadyExist(AlreadyExists):
 
     This usually translates to an HTTP 409 Conflict response.
     """
+
     pass
 
 
@@ -22,4 +23,5 @@ class UserNotFound(NotFound):
 
     This usually translates to an HTTP 404 Not Found response.
     """
+
     pass

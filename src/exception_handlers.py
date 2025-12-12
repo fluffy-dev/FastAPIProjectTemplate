@@ -16,6 +16,7 @@ async def not_found_exception_handler(request: Request, exc: NotFound):
         content={"detail": str(exc) or "Resource not found."},
     )
 
+
 async def already_exists_exception_handler(request: Request, exc: AlreadyExists):
     """
     Handles AlreadyExists exceptions, returning a 409 response.
@@ -24,6 +25,7 @@ async def already_exists_exception_handler(request: Request, exc: AlreadyExists)
         status_code=status.HTTP_409_CONFLICT,
         content={"detail": str(exc) or "Resource already exists."},
     )
+
 
 async def pagination_exception_handler(request: Request, exc: PaginationError):
     """
@@ -34,7 +36,10 @@ async def pagination_exception_handler(request: Request, exc: PaginationError):
         content={"detail": str(exc) or "Pagination error, offset or limit invalid."},
     )
 
-async def token_invalid_signature_exception_handler(request: Request, exc: InvalidSignatureError):
+
+async def token_invalid_signature_exception_handler(
+    request: Request, exc: InvalidSignatureError
+):
     """
     Handles InvalidSignatureError exceptions, returning a 400 response.
     """
@@ -51,17 +56,26 @@ async def credentials_exception_handler(request: Request, exc: CredentialsExcept
         content={"detail": str(exc) or "Credentials error, login or password invalid."},
     )
 
+
 async def access_token_missing_handler(request: Request, exc: AccessTokenMissing):
     return JSONResponse(
         status_code=401,
-        content={"detail": str(exc) or "Access token missing", "code": "access_token_missing"}
+        content={
+            "detail": str(exc) or "Access token missing",
+            "code": "access_token_missing",
+        },
     )
+
 
 async def refresh_token_missing_handler(request: Request, exc: RefreshTokenMissing):
     return JSONResponse(
         status_code=401,
-        content={"detail": str(exc) or "Refresh token missing", "code": "refresh_token_missing"}
+        content={
+            "detail": str(exc) or "Refresh token missing",
+            "code": "refresh_token_missing",
+        },
     )
+
 
 exception_handlers = {
     NotFound: not_found_exception_handler,

@@ -12,8 +12,16 @@ class Settings(BaseSettings):
     def log_config(self) -> dict:
         config = {
             "loggers": {
-                "uvicorn": {"handlers": ["default"], "level": self.logging_level, "propagate": False},
-                "sqlalchemy": {"handlers": ["default"], "level": self.logging_level, "propagate": False},
+                "uvicorn": {
+                    "handlers": ["default"],
+                    "level": self.logging_level,
+                    "propagate": False,
+                },
+                "sqlalchemy": {
+                    "handlers": ["default"],
+                    "level": self.logging_level,
+                    "propagate": False,
+                },
             }
         }
         return config
@@ -30,7 +38,11 @@ def make_logger_conf(*confs, log_level, json_log):
                 "format": fmt,
                 "datefmt": datefmt,
             },
-            "json": {"format": fmt, "datefmt": datefmt, "class": "pythonjsonlogger.jsonlogger.JsonFormatter"},
+            "json": {
+                "format": fmt,
+                "datefmt": datefmt,
+                "class": "pythonjsonlogger.jsonlogger.JsonFormatter",
+            },
         },
         "handlers": {
             "default": {
@@ -55,5 +67,5 @@ settings = Settings()
 logger_config = make_logger_conf(
     settings.log_config,
     log_level=settings.logging_level,
-    json_log=settings.logging_json
+    json_log=settings.logging_json,
 )

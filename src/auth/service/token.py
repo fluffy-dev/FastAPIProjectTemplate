@@ -135,7 +135,9 @@ class TokenService:
             "token_type": "access",
             "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
             "exp": int(expire.timestamp()),
-            "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
+            "iat": int(
+                now.timestamp()
+            ),  # The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         return await self.encode_token(payload)
 
@@ -161,7 +163,9 @@ class TokenService:
             "token_type": "refresh",
             "user": {"user_id": str(dto.id), "user_name": str(dto.name)},
             "exp": int(expire.timestamp()),
-            "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
+            "iat": int(
+                now.timestamp()
+            ),  # The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         return await self.encode_token(payload)
 

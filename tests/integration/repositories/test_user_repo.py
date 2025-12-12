@@ -9,6 +9,7 @@ from src.auth.dto import UpdateUserDTO, FindUserDTO
 
 pytestmark = pytest.mark.asyncio
 
+
 async def test_create_user(db_session):
     """
     Verifies that a user can be successfully persisted to the database.
@@ -18,7 +19,7 @@ async def test_create_user(db_session):
         name="Test User",
         login="test_user",
         email="test@example.com",
-        password="hashed_secret"
+        password="hashed_secret",
     )
 
     result = await repo.create(entity)
@@ -32,6 +33,7 @@ async def test_create_user(db_session):
     user_in_db = db_result.scalar_one()
     assert user_in_db.login == "test_user"
 
+
 async def test_create_duplicate_user_raises_error(db_session):
     """
     Verifies that the repository raises UserAlreadyExist on unique constraint violation.
@@ -41,12 +43,13 @@ async def test_create_duplicate_user_raises_error(db_session):
         name="User 1",
         login="unique_login",
         email="unique@example.com",
-        password="hashed"
+        password="hashed",
     )
     await repo.create(entity)
 
     with pytest.raises(UserAlreadyExist):
         await repo.create(entity)
+
 
 async def test_find_user_by_criteria(db_session):
     """
@@ -64,6 +67,7 @@ async def test_find_user_by_criteria(db_session):
 
     assert found_user is not None
     assert found_user.login == "find_me"
+
 
 async def test_update_user_not_found(db_session):
     """
