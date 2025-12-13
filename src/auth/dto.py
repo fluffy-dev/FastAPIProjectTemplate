@@ -1,33 +1,22 @@
+from datetime import datetime
 from typing import Optional, Annotated, Union
 from pydantic import BaseModel, EmailStr, StringConstraints
 
 
 # Token
-class TokenDTO(BaseModel):
-    """
-    Data Transfer Object for returning JWT authentication tokens to the client.
-
-    Attributes:
-        access_token (str): The JWT access token used for accessing protected resources.
-        refresh_token (str): The JWT refresh token used to obtain a new access token.
-        token_type (str): The type of token, typically "bearer". Defaults to "bearer".
-    """
-
+class TokenPairDTO(BaseModel):
     access_token: str
     refresh_token: str
-    token_type: str = "bearer"
 
+class BaseTokenDTO(BaseModel):
+    token: str
 
-class TokenPayloadDTO(BaseModel):
-    """
-    Data Transfer Object representing the decoded payload of a JWT.
+class RefreshTokenDTO(BaseTokenDTO):
+    jti: str
+    expire: datetime
 
-    Attributes:
-        sub (Optional[str]): The subject of the token (typically user ID or login).
-    """
-
-    sub: Optional[str]
-
+class AccessTokenDTO(BaseTokenDTO):
+    pass
 
 # User
 class BaseUserDTO(BaseModel):
@@ -156,3 +145,56 @@ class RegistrationDTO(BaseModel):
     login: Annotated[str, StringConstraints(max_length=50)]
     email: EmailStr
     password: Optional[str] = None
+
+
+#Session
+class UserSessionInfoDTO(BaseModel):
+    """
+    Data Transfer Object for User Session requests.
+
+    Attributes:
+        user_agent: Client browser info.
+        ip_address: Client IP address.
+    """
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+
+
+class SessionDTO(BaseModel):
+    """
+    Data Transfer Object for User Sessions (Refresh Tokens).
+
+    Attributes:
+        id: Primary key of the session.
+        user_id: ID of the user owning the session.
+        refresh_token_jti: Unique UUID identifier for the refresh token.
+        expires_at: Absolute expiration timestamp.
+        created_at: Creation timestamp.
+        user_agent: Client browser info.
+        ip_address: Client IP address.
+    """
+    id: int
+    user_id: int
+    refresh_token_jti: str
+    expires_at: datetime
+    created_at: datetime
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None
+
+
+class CreateSessionDTO(BaseModel):
+    """
+    DTO for creating a new session.
+
+    Attributes:
+        user_id: ID of the user.
+        refresh_token_jti: Unique UUID for the token.
+        expires_at: Expiration timestamp.
+        user_agent: Client browser info.
+        ip_address: Client IP address.
+    """
+    user_id: int
+    refresh_token_jti: str
+    expires_at: datetime
+    user_agent: Optional[str] = None
+    ip_address: Optional[str] = None

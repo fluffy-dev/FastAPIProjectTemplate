@@ -1,52 +1,70 @@
 from typing import Optional
 
-from src.auth.dto import RegistrationDTO, CreateUserDTO
-from src.auth.exceptions.auth import CredentialsException
-from src.auth.dependencies.user.service import IUserService
-from src.auth.dto import FindUserDTO, UserDTO
-from src.auth.service.password import PasswordService
-from src.auth.dto import TokenDTO, LoginDTO
+from src.auth.dto import (
+    CreateSessionDTO, UserSessionInfoDTO, SessionDTO,
+    RefreshTokenDTO, AccessTokenDTO, TokenPairDTO,
+    LoginDTO, RegistrationDTO, CreateUserDTO,
+    FindUserDTO, UserDTO, BaseUserDTO
 
-from src.auth.dependencies.token.service import ITokenService
+)
+from src.auth.exceptions.session import SessionNotFound
+from src.auth.exceptions.auth import CredentialsException
 from src.auth.exceptions.token import InvalidTokenError
 from src.auth.exceptions.user import UserNotFound
+
+from src.auth.dependencies.user.service import IUserService
+from src.auth.dependencies.token.service import ITokenService
+from src.auth.dependencies.session.service import ISessionService
+
+from src.auth.service.password import PasswordService
 
 
 class AuthService:
     """
     Service layer responsible for high-level authentication flows.
     """
-
-    def __init__(self, user_service: IUserService, token_service: ITokenService):
+    def __init__(self, user_service: IUserService, token_service: ITokenService, session_service: ISessionService):
         self.user_service = user_service
         self.token_service = token_service
+        self.session_service = session_service
 
-    async def login(self, dto: LoginDTO) -> TokenDTO:
+    async def login(self, login_dto: LoginDTO, user_session_dto: UserSessionInfoDTO) -> TokenPairDTO:
         """
         Authenticates a user and generates JWT tokens.
 
-        1. Finds the user by login.
-        2. Verifies the provided password against the stored hash.
-        3. Generates access and refresh tokens.
-
         Args:
-            dto (LoginDTO): The login credentials (username/email and password).
+            login_dto (LoginDTO): login data, username and password
+            user_session_dto (UserSessionInfoDTO): info about user browser session, ip_address, user_agent, ... .
 
         Returns:
-            TokenDTO: The generated access and refresh tokens.
+            TokenPairDTO: JWT tokens, access and refresh tokens
 
-        Raises:
-            CredentialsException: If the user is not found or the password is incorrect.
+        Raise:
+            CredentialsException: if the credentials are invalid, username not found, or password not match
         """
-        user: Optional[UserDTO] = await self.user_service.find(
-            FindUserDTO(login=dto.login)
-        )
+        user: Optional[BaseUserDTO] = await self.user_service.find(FindUserDTO(login=login_dto.login))
 
-        if not user or not PasswordService.verify_password(dto.password, user.password):
+        if not user or not PasswordService.verify_password(login_dto.password, user.password):
             raise CredentialsException
 
-        user: UserDTO = user
-        return await self.token_service.create_tokens(user)
+        user: BaseUserDTO = user
+
+        access_token: AccessTokenDTO = await self.token_service.generate_access_token(user)
+        refresh_token: RefreshTokenDTO = await self.token_service.generate_refresh_token(user)
+
+        session_dto = CreateSessionDTO(
+            user_id = user.id,
+            refresh_token_jti=refresh_token.jti,
+            expires_at=refresh_token.expire,
+            user_agent=user_session_dto.user_agent,
+            ip_address=user_session_dto.ip_address,
+        )
+        await self.session_service.create(session_dto)
+
+        return TokenPairDTO(
+            access_token=access_token.token,
+            refresh_token=refresh_token.token,
+        )
 
     async def register(self, dto: RegistrationDTO) -> UserDTO:
         """
@@ -70,39 +88,69 @@ class AuthService:
 
         return await self.user_service.create(create_user_dto)
 
-    async def refresh_session(self, refresh_token: str) -> TokenDTO:
-        """
-        Refreshes the user session using a valid refresh token.
-
-        1. Validates the refresh token signature and type.
-        2. Extracts the user ID.
-        3. Verifies the user still exists in the database.
-        4. Generates a fresh pair of Access and Refresh tokens.
-
-        Args:
-            refresh_token (str): The JWT refresh token string.
-
-        Returns:
-            TokenDTO: A new pair of tokens.
-
-        Raises:
-            InvalidTokenError: If token is invalid or expired.
-            UserNotFound: If the user ID in the token no longer exists.
-        """
+    async def refresh_session(self, refresh_token: str) -> TokenPairDTO:
         payload = await self.token_service.verify_refresh_token(refresh_token)
 
-        user_data = payload.get("user", {})
-        user_id = user_data.get("user_id")
-
-        if not user_id:
-            raise InvalidTokenError("Token payload missing user_id")
+        user_id = payload.get("sub")
+        jti = payload.get("jti")
+        if not user_id or not jti:
+            raise InvalidTokenError("Token payload invalid")
 
         user = await self.user_service.get(int(user_id))
+
         if not user:
             raise UserNotFound("User associated with this token no longer exists")
 
-        user_dto = UserDTO(
-            id=user.id, name=user.name, login=user.login, email=user.email
+        session: Optional[SessionDTO] = await self.session_service.get_by_jti(jti=jti)
+
+        if not session:
+            raise SessionNotFound("Session associated with this token no longer exists")
+
+
+        access_token: AccessTokenDTO = await self.token_service.generate_access_token(user)
+        refresh_token: RefreshTokenDTO = await self.token_service.generate_refresh_token(user)
+
+        await self.session_service.update_jti(
+            old_jti=jti,
+            new_jti=refresh_token.jti,
+            new_expires_at=refresh_token.expire,
         )
 
-        return await self.token_service.create_tokens(user_dto)
+        return TokenPairDTO(
+            access_token=access_token.token,
+            refresh_token=refresh_token.token,
+        )
+
+    async def logout(self, refresh_token: str) -> None:
+        payload = await self.token_service.verify_refresh_token(refresh_token)
+
+        jti = payload.get("jti")
+
+        if not jti:
+            raise InvalidTokenError("Token payload invalid")
+
+        await self.session_service.delete_by_jti(
+            jti=jti
+        )
+
+        return None
+
+    async def logout_all_sessions_for_user(self, refresh_token: str) -> None:
+        payload = await self.token_service.verify_refresh_token(refresh_token)
+
+        user_id = payload.get("sub")
+        jti = payload.get("jti")
+        if not user_id or not jti:
+            raise InvalidTokenError("Token payload invalid")
+
+        user_id = int(user_id)
+
+        user = await self.user_service.get(user_id)
+
+        if not user:
+            raise UserNotFound("User associated with this token no longer exists")
+
+        await self.session_service.delete_all_for_user(user_id)
+
+        return None
+
