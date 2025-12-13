@@ -1,5 +1,3 @@
-
-
 class AlreadyExists(Exception):
     """Raised when object violets uniqueness rules, and already exists"""
 

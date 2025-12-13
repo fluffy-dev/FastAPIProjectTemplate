@@ -2,6 +2,7 @@ from datetime import datetime
 from typing import Optional, Annotated, Union
 from pydantic import BaseModel, EmailStr, StringConstraints
 
+
 # Token
 class TokenPairDTO(BaseModel):
     access_token: str
@@ -33,6 +34,7 @@ class BaseUserDTO(BaseModel):
         email (EmailStr): The valid email address.
         password (Optional[str]): The hashed password string.
     """
+
     id: Optional[int] = None
     name: Annotated[str, StringConstraints(max_length=30)]
     login: Annotated[str, StringConstraints(max_length=50)]
@@ -53,6 +55,7 @@ class UserDTO(BaseModel):
         login (str): The unique username.
         email (EmailStr): The user's email address.
     """
+
     id: int
     name: Annotated[str, StringConstraints(max_length=30)]
     login: Annotated[str, StringConstraints(max_length=50)]
@@ -72,6 +75,7 @@ class CreateUserDTO(BaseModel):
         email (EmailStr): The user's email.
         password (str): The plain-text password (to be hashed by the service).
     """
+
     name: Annotated[str, StringConstraints(max_length=30)]
     login: Annotated[str, StringConstraints(max_length=50)]
     email: EmailStr
@@ -90,6 +94,7 @@ class FindUserDTO(BaseModel):
         login (Optional[str]): Search by username.
         email (Optional[EmailStr]): Search by email.
     """
+
     id: Optional[int] = None
     login: Optional[Annotated[str, StringConstraints(max_length=50)]] = None
     email: Optional[EmailStr] = None
@@ -106,6 +111,7 @@ class UpdateUserDTO(BaseModel):
         name (Optional[str]): New display name.
         login (Optional[str]): New username.
     """
+
     name: Optional[Annotated[str, StringConstraints(max_length=30)]] = None
     login: Optional[Annotated[str, StringConstraints(max_length=50)]] = None
 
@@ -119,6 +125,7 @@ class LoginDTO(BaseModel):
         login (Union[str, EmailStr]): Accepts either a username or an email address.
         password (str): The plain-text password.
     """
+
     login: Union[Annotated[str, StringConstraints(max_length=50)], EmailStr]
     password: str
 
@@ -133,6 +140,7 @@ class RegistrationDTO(BaseModel):
         email (EmailStr): The user's email address.
         password (Optional[str]): The plain-text password.
     """
+
     name: Annotated[str, StringConstraints(max_length=30)]
     login: Annotated[str, StringConstraints(max_length=50)]
     email: EmailStr

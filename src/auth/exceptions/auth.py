@@ -1,5 +1,3 @@
-
-
 class CredentialsException(Exception):
     """
     Raised when authentication fails due to invalid credentials.
@@ -9,4 +7,5 @@ class CredentialsException(Exception):
 
     This usually translates to an HTTP 401 Unauthorized response.
     """
+
     pass

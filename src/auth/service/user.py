@@ -6,10 +6,12 @@ from src.auth.dependencies.user.repository import IUserRepository
 from src.auth.dto import BaseUserDTO, CreateUserDTO, UserDTO
 from src.auth.service.password import PasswordService
 
+
 class UserService:
     """
     Service for managing user lifecycle events (creation, retrieval).
     """
+
     def __init__(self, user_repository: IUserRepository):
         self.repository = user_repository
 

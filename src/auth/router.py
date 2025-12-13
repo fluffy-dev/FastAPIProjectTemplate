@@ -67,6 +67,7 @@ async def register(dto: RegistrationDTO, service: IAuthService):
     """
     return await service.register(dto)
 
+
 @router.get("/me", response_model=UserDTO, summary="Get current user profile")
 async def read_users_me(current_user: ICurrentUser):
     """

@@ -123,7 +123,9 @@ class TokenService:
             "token_type": "access",
             "sub": str(dto.id),
             "exp": int(expire.timestamp()),
-            "iat": int(now.timestamp()), #The number of seconds that have elapsed since January 1, 1970 (UTC).
+            "iat": int(
+                now.timestamp()
+            ),  # The number of seconds that have elapsed since January 1, 1970 (UTC).
         }
         token = await self.encode_token(payload)
         return AccessTokenDTO(token=token)

@@ -14,6 +14,7 @@ class UserRepository:
     """
     Repository for handling User database operations using SQLAlchemy.
     """
+
     def __init__(self, session: ISession) -> None:
         self.session: ISession = session
 
@@ -35,7 +36,7 @@ class UserRepository:
             name=entity.name,
             login=entity.login,
             email=entity.email,
-            password=entity.password # Expects hashed password
+            password=entity.password,  # Expects hashed password
         )
         self.session.add(instance)
         try:
@@ -138,5 +139,5 @@ class UserRepository:
             name=instance.name,
             login=instance.login,
             email=instance.email,
-            password=instance.password
+            password=instance.password,
         )
