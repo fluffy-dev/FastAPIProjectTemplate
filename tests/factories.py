@@ -1,7 +1,7 @@
 from polyfactory.factories.pydantic_factory import ModelFactory
 from polyfactory.factories.sqlalchemy_factory import SQLAlchemyFactory
 
-from src.auth.dto import RegistrationDTO, UserDTO, TokenDTO, BaseUserDTO
+from src.auth.dto import RegistrationDTO, UserDTO, TokenPairDTO, BaseUserDTO
 from src.auth.models.user import UserModel
 
 
@@ -29,10 +29,10 @@ class BaseUserDTOFactory(ModelFactory[BaseUserDTO]):
     __model__ = BaseUserDTO
 
 
-class TokenDTOFactory(ModelFactory[TokenDTO]):
+class TokenDTOFactory(ModelFactory[TokenPairDTO]):
     """Factory for generating TokenDTO objects."""
 
-    __model__ = TokenDTO
+    __model__ = TokenPairDTO
 
 
 class UserModelFactory(SQLAlchemyFactory[UserModel]):

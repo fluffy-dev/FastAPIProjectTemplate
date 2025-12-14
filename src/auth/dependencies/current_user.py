@@ -38,6 +38,7 @@ async def get_current_user(
     payload: dict = await token_service.verify_access_token(access_token)
 
     user_id = payload.get("sub")
+    print(payload)
 
     if user_id is None:
         raise InvalidTokenError

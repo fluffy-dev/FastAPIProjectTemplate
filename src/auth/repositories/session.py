@@ -30,11 +30,10 @@ class SessionRepository:
         """
         instance = UserSessionModel(
             user_id=entity.user_id,
-        refresh_token_jti=entity.refresh_token_jti,
-        expires_at=entity.expires_at,
-        user_agent=entity.user_agent,
-        ip_address=entity.ip_address,
-
+            refresh_token_jti=entity.refresh_token_jti,
+            expires_at=entity.expires_at,
+            user_agent=entity.user_agent,
+            ip_address=entity.ip_address,
         )
         self.session.add(instance)
         await self.session.commit()
@@ -51,18 +50,13 @@ class SessionRepository:
         Returns:
             SessionDTO if found, otherwise None.
         """
-        stmt = select(UserSessionModel).where(
-            UserSessionModel.refresh_token_jti == jti
-        )
+        stmt = select(UserSessionModel).where(UserSessionModel.refresh_token_jti == jti)
         result = await self.session.execute(stmt)
         instance = result.scalar_one_or_none()
         return self._get_dto(instance) if instance else None
 
     async def update_jti(
-        self,
-        old_jti: str,
-        new_jti: str,
-        new_expires_at: datetime
+        self, old_jti: str, new_jti: str, new_expires_at: datetime
     ) -> None:
         """
         Updates the JTI and expiration of an existing session.
@@ -76,6 +70,7 @@ class SessionRepository:
             update(UserSessionModel)
             .where(UserSessionModel.refresh_token_jti == old_jti)
             .values(refresh_token_jti=new_jti, expires_at=new_expires_at)
+            .returning(UserSessionModel)
         )
         result = await self.session.execute(stmt)
         await self.session.commit()
@@ -90,9 +85,7 @@ class SessionRepository:
         Args:
             jti: The JTI of the session to delete.
         """
-        stmt = delete(UserSessionModel).where(
-            UserSessionModel.refresh_token_jti == jti
-        )
+        stmt = delete(UserSessionModel).where(UserSessionModel.refresh_token_jti == jti)
         await self.session.execute(stmt)
         await self.session.commit()
 
@@ -103,9 +96,7 @@ class SessionRepository:
         Args:
             user_id: The ID of the user.
         """
-        stmt = delete(UserSessionModel).where(
-            UserSessionModel.user_id == user_id
-        )
+        stmt = delete(UserSessionModel).where(UserSessionModel.user_id == user_id)
         await self.session.execute(stmt)
         await self.session.commit()
 
@@ -113,11 +104,11 @@ class SessionRepository:
     def _get_dto(instance: UserSessionModel):
         """Helper function to transform SQLAlchemy instance to pydantic object"""
         return SessionDTO(
-            id = instance.id,
-            user_id = instance.user_id,
-            refresh_token_jti = instance.refresh_token_jti,
-            expires_at = instance.expires_at,
-            created_at = instance.created_at,
-            user_agent = instance.user_agent,
-            ip_address = instance.ip_address,
+            id=instance.id,
+            user_id=instance.user_id,
+            refresh_token_jti=instance.refresh_token_jti,
+            expires_at=instance.expires_at,
+            created_at=instance.created_at,
+            user_agent=instance.user_agent,
+            ip_address=instance.ip_address,
         )
